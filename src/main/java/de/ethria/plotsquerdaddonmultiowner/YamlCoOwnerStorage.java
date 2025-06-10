@@ -1,19 +1,14 @@
 package de.ethria.plotsquerdaddonmultiowner;
 
-import com.plotsquared.core.PlotSquared;
-import com.plotsquared.core.location.Location;
-import com.plotsquared.core.plot.Plot;
-import com.plotsquared.core.plot.PlotId;
-import com.plotsquared.core.plot.PlotArea;
-
 import java.util.*;
+import java.io.*;
+import org.bukkit.Bukkit;
+import org.bukkit.configuration.file.YamlConfiguration;
 
 public class YamlCoOwnerStorage implements CoOwnerStorage {
     private final MultiOwnerAddon plugin;
-    // Map: plotId -> coownerUUIDs
-    private final Map<String, Set<UUID>> coowners = new HashMap<>();
-    // Map: plotId -> ownerUUID (dies ist für die Überprüfung nötig)
-    private final Map<String, UUID> plotOwners = new HashMap<>();
+    private File file;
+    private YamlConfiguration yaml;
 
     public YamlCoOwnerStorage(MultiOwnerAddon plugin) {
         this.plugin = plugin;
@@ -21,80 +16,72 @@ public class YamlCoOwnerStorage implements CoOwnerStorage {
 
     @Override
     public void init() {
-        // Lade aus YAML, falls benötigt
-    }
-
-    @Override
-    public void close() {
-        // Speichere nach YAML, falls benötigt
+        try {
+            file = new File(plugin.getDataFolder(), "coowners.yml");
+            if (!file.exists()) file.createNewFile();
+            yaml = YamlConfiguration.loadConfiguration(file);
+        } catch (IOException e) {
+            Bukkit.getLogger().severe("[MultiOwnerAddon] YAML init error: " + e.getMessage());
+        }
     }
 
     @Override
     public void addCoOwner(String plotId, UUID uuid) {
-        coowners.computeIfAbsent(plotId, k -> new HashSet<>()).add(uuid);
-        plotOwners.put(plotId, getOwner(plotId));
+        List<String> owners = yaml.getStringList(plotId);
+        if (!owners.contains(uuid.toString())) {
+            owners.add(uuid.toString());
+            yaml.set(plotId, owners);
+            save();
+        }
     }
 
     @Override
     public boolean removeCoOwner(String plotId, UUID uuid) {
-        Set<UUID> co = coowners.get(plotId);
-        if (co != null) {
-            boolean removed = co.remove(uuid);
-            if (co.isEmpty()) {
-                coowners.remove(plotId);
-                plotOwners.remove(plotId);
-            }
-            return removed;
-        }
-        return false;
+        List<String> owners = yaml.getStringList(plotId);
+        boolean removed = owners.remove(uuid.toString());
+        yaml.set(plotId, owners);
+        save();
+        return removed;
     }
 
     @Override
     public void removeAllCoOwners(String plotId) {
-        coowners.remove(plotId);
-        plotOwners.remove(plotId);
+        yaml.set(plotId, null);
+        save();
+    }
+
+    public Set<UUID> getCoOwners(String plotId) {
+        List<String> owners = yaml.getStringList(plotId);
+        Set<UUID> result = new HashSet<>();
+        for (String s : owners) {
+            try {
+                result.add(UUID.fromString(s));
+            } catch (IllegalArgumentException ignore) {}
+        }
+        return result;
     }
 
     @Override
     public Set<String> getAllPlotIdsWithCoOwners() {
-        return new HashSet<>(coowners.keySet());
+        return yaml.getKeys(false);
+    }
+
+    // HIER: Owner-Prüfung via PlotSquared!
+    @Override
+    public boolean isOwnerValid(String plotId, UUID ownerUuid) {
+        if (ownerUuid == null) return false;
+        UUID actualOwner = PlotUtil.getOwnerFromPlotSquared(plotId);
+        return ownerUuid.equals(actualOwner);
     }
 
     @Override
-    public boolean isOwnerValid(String plotIdStr, UUID ownerUuid) {
-        UUID savedOwner = plotOwners.get(plotIdStr);
-        if (savedOwner == null || ownerUuid == null) return false;
-        return savedOwner.equals(ownerUuid);
+    public void close() {
+        save();
     }
 
-    // Hilfsmethode: Holt aktuellen Owner per PlotSquared API
-    private UUID getOwner(String plotIdStr) {
+    private void save() {
         try {
-            PlotId plotId = PlotId.fromString(plotIdStr);
-            String[] parts = plotIdStr.split(";", 2);
-            if (parts.length != 2) return null;
-
-            String worldName = parts[0];
-            String[] coords = parts[1].split(",");
-            if (coords.length != 2) return null;
-
-            int px = Integer.parseInt(coords[0]);
-            int pz = Integer.parseInt(coords[1]);
-
-            // Verwende passende Plotgröße (z.B. 32, evtl. dynamisch auslesen)
-            int plotSize = 32;
-            int bx = px * plotSize + plotSize / 2;
-            int bz = pz * plotSize + plotSize / 2;
-
-            com.plotsquared.core.location.Location loc =
-                    com.plotsquared.core.location.Location.at(worldName, bx, 64, bz); // Y-Wert mittelmäßig
-
-            Plot plot = Plot.getPlot(loc);
-            return (plot != null) ? plot.getOwner() : null;
-
-        } catch (Exception e) {
-            plugin.getLogger().warning("Fehler beim Ermitteln des Plot-Owners für '" + plotIdStr + "': " + e.getMessage());
-            return null;
-        }
+            yaml.save(file);
+        } catch (IOException ignore) {}
     }
 }

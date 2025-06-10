@@ -1,7 +1,7 @@
 package de.ethria.plotsquerdaddonmultiowner;
 
 import org.bukkit.Bukkit;
-
+import de.ethria.plotsquerdaddonmultiowner.PlotUtil;
 import java.sql.*;
 import java.util.*;
 
@@ -108,20 +108,8 @@ public class MySQLCoOwnerStorage implements CoOwnerStorage {
     @Override
     public boolean isOwnerValid(String plotId, UUID ownerUuid) {
         if (ownerUuid == null) return false;
-        try {
-            PreparedStatement ps = connection.prepareStatement(
-                    "SELECT owner_uuid FROM plot_owners WHERE plotid=?;"
-            );
-            ps.setString(1, plotId);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                String savedOwner = rs.getString("owner_uuid");
-                return ownerUuid.toString().equals(savedOwner);
-            }
-        } catch (SQLException e) {
-            plugin.getLogger().warning("[MultiOwnerAddon] MySQL isOwnerValid error: " + e.getMessage());
-        }
-        return false;
+        UUID actualOwner = PlotUtil.getOwnerFromPlotSquared(plotId);
+        return ownerUuid.equals(actualOwner);
     }
 
     @Override
