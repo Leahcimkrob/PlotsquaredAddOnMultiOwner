@@ -31,11 +31,22 @@
         </repository>
     </repositories>
 
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.intellectualsites.bom</groupId>
+                <artifactId>bom-newest</artifactId>
+                <version>1.52</version>
+                <scope>import</scope>
+                <type>pom</type>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <dependencies>
         <dependency>
             <groupId>com.sk89q.worldedit</groupId>
-            <artifactId>worldedit</artifactId>
+            <artifactId>worldedit-bukkit</artifactId>
             <version>7.2.17</version>
             <scope>provided</scope>
         </dependency>

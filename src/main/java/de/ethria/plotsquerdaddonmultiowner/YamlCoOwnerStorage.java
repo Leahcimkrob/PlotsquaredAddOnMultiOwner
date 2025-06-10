@@ -1,6 +1,7 @@
 package de.ethria.plotsquerdaddonmultiowner;
 
 import com.plotsquared.core.PlotSquared;
+import com.plotsquared.core.location.Location;
 import com.plotsquared.core.plot.Plot;
 import com.plotsquared.core.plot.PlotId;
 import com.plotsquared.core.plot.PlotArea;
@@ -70,10 +71,29 @@ public class YamlCoOwnerStorage implements CoOwnerStorage {
     private UUID getOwner(String plotIdStr) {
         try {
             PlotId plotId = PlotId.fromString(plotIdStr);
-            PlotArea area = PlotSquared.get().getPlotAreaManager().getPlotArea(plotId);
-            Plot plot = (area != null) ? area.getPlot(plotId) : null;
+            String[] parts = plotIdStr.split(";", 2);
+            if (parts.length != 2) return null;
+
+            String worldName = parts[0];
+            String[] coords = parts[1].split(",");
+            if (coords.length != 2) return null;
+
+            int px = Integer.parseInt(coords[0]);
+            int pz = Integer.parseInt(coords[1]);
+
+            // Verwende passende Plotgröße (z.B. 32, evtl. dynamisch auslesen)
+            int plotSize = 32;
+            int bx = px * plotSize + plotSize / 2;
+            int bz = pz * plotSize + plotSize / 2;
+
+            com.plotsquared.core.location.Location loc =
+                    com.plotsquared.core.location.Location.at(worldName, bx, 64, bz); // Y-Wert mittelmäßig
+
+            Plot plot = Plot.getPlot(loc);
             return (plot != null) ? plot.getOwner() : null;
+
         } catch (Exception e) {
+            plugin.getLogger().warning("Fehler beim Ermitteln des Plot-Owners für '" + plotIdStr + "': " + e.getMessage());
             return null;
         }
     }

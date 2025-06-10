@@ -2,6 +2,7 @@ package de.ethria.plotsquerdaddonmultiowner;
 
 import java.util.Set;
 import java.util.UUID;
+import java.util.*;
 
 public interface CoOwnerStorage {
     void init();
@@ -13,4 +14,7 @@ public interface CoOwnerStorage {
 
     Set<String> getAllPlotIdsWithCoOwners();
     boolean isOwnerValid(String plotId, UUID ownerUuid);
+
+
+
 }

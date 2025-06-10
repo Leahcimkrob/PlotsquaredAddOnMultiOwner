@@ -187,15 +187,37 @@ public class MultiOwnerAddon extends JavaPlugin implements CommandExecutor {
     private void cleanupCoOwners() {
         Set<String> plotIds = coOwnerStorage.getAllPlotIdsWithCoOwners();
         for (String plotIdStr : plotIds) {
-            PlotId plotId = PlotId.fromString(plotIdStr);
-            PlotArea area = PlotSquared.get().getPlotAreaManager().getPlotArea(plotId);
-            Plot plot = (area != null) ? area.getPlot(plotId) : null;
-            UUID owner = (plot != null) ? plot.getOwner() : null;
-            if (plot == null || !coOwnerStorage.isOwnerValid(plotIdStr, owner)) {
-                coOwnerStorage.removeAllCoOwners(plotIdStr);
+            try {
+                PlotId plotId = PlotId.fromString(plotIdStr);
+                String[] parts = plotIdStr.split(";", 2);
+                if (parts.length != 2) continue;
+
+                String worldName = parts[0];
+                String[] coords = parts[1].split(",");
+                if (coords.length != 2) continue;
+
+                int px = Integer.parseInt(coords[0]);
+                int pz = Integer.parseInt(coords[1]);
+
+                // Berechne Block-Koordinaten aus Plot-Koordinaten (z. B. Plotgröße 32)
+                int plotSize = 32; // ggf. aus config holen
+                int bx = px * plotSize + plotSize / 2;
+                int bz = pz * plotSize + plotSize / 2;
+
+                Location loc = Location.at(worldName, bx, 64, bz); // Y=64 als Mittelwert
+                Plot plot = Plot.getPlot(loc);
+                UUID owner = (plot != null) ? plot.getOwner() : null;
+
+                if (plot == null || !coOwnerStorage.isOwnerValid(plotIdStr, owner)) {
+                    coOwnerStorage.removeAllCoOwners(plotIdStr);
+                }
+            } catch (Exception e) {
+                getLogger().warning("Fehler beim Verarbeiten von PlotID " + plotIdStr + ": " + e.getMessage());
             }
         }
     }
+
+
 
     private static class MultiownerRequest {
         public final UUID applicant;
@@ -211,4 +233,6 @@ public class MultiOwnerAddon extends JavaPlugin implements CommandExecutor {
         String msg = getConfig().getString("messages." + key, "&cNachricht nicht definiert: " + key);
         return ChatColor.translateAlternateColorCodes('&', msg);
     }
+
+
 }
