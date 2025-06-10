@@ -3,7 +3,6 @@ package de.ethria.plotsquerdaddonmultiowner;
 import com.plotsquared.core.PlotSquared;
 import com.plotsquared.core.plot.Plot;
 import com.plotsquared.core.plot.PlotId;
-import com.plotsquared.core.plot.PlotArea;
 import com.plotsquared.core.location.Location;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -14,12 +13,15 @@ import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
-public class MultiOwnerAddon extends JavaPlugin implements CommandExecutor {
+public class MultiOwnerAddon extends JavaPlugin implements CommandExecutor, TabCompleter {
 
     private final Map<UUID, MultiownerRequest> pendingRequests = new ConcurrentHashMap<>();
     private CoOwnerStorage coOwnerStorage;
     public static MultiOwnerAddon instance;
+
+    private static final List<String> SUBCOMMANDS = Arrays.asList("add", "accept", "deny", "remove");
 
     @Override
     public void onEnable() {
@@ -38,6 +40,7 @@ public class MultiOwnerAddon extends JavaPlugin implements CommandExecutor {
         PluginCommand cmd = this.getCommand("multiowner");
         if (cmd != null) {
             cmd.setExecutor(this);
+            cmd.setTabCompleter(this); // TabCompleter registrieren
             cmd.setAliases(aliases);
         }
 
@@ -181,6 +184,35 @@ public class MultiOwnerAddon extends JavaPlugin implements CommandExecutor {
     }
 
     /**
+     * Tab-Completion für Subcommands und Spielernamen.
+     */
+    @Override
+    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        List<String> completions = new ArrayList<>();
+        if (args.length == 1) {
+            String input = args[0].toLowerCase();
+            for (String sub : SUBCOMMANDS) {
+                if (sub.startsWith(input)) {
+                    completions.add(sub);
+                }
+            }
+            return completions;
+        }
+        if (args.length == 2) {
+            if (args[0].equalsIgnoreCase("add") || args[0].equalsIgnoreCase("remove")
+                    || args[0].equalsIgnoreCase("accept") || args[0].equalsIgnoreCase("deny")) {
+                String input = args[1].toLowerCase();
+                completions.addAll(Bukkit.getOnlinePlayers().stream()
+                        .map(Player::getName)
+                        .filter(name -> name.toLowerCase().startsWith(input))
+                        .collect(Collectors.toList()));
+                return completions;
+            }
+        }
+        return completions;
+    }
+
+    /**
      * Pollt regelmäßig alle gespeicherten Plots und räumt CoOwner auf,
      * falls das Plot nicht mehr existiert oder der Owner sich geändert hat.
      */
@@ -217,8 +249,6 @@ public class MultiOwnerAddon extends JavaPlugin implements CommandExecutor {
         }
     }
 
-
-
     private static class MultiownerRequest {
         public final UUID applicant;
         public final String plotId;
@@ -233,6 +263,4 @@ public class MultiOwnerAddon extends JavaPlugin implements CommandExecutor {
         String msg = getConfig().getString("messages." + key, "&cNachricht nicht definiert: " + key);
         return ChatColor.translateAlternateColorCodes('&', msg);
     }
-
-
 }
