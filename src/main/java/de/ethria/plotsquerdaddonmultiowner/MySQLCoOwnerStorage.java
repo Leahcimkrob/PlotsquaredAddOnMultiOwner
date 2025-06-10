@@ -3,9 +3,7 @@ package de.ethria.plotsquerdaddonmultiowner;
 import org.bukkit.Bukkit;
 
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 public class MySQLCoOwnerStorage implements CoOwnerStorage {
     private final MultiOwnerAddon plugin;
@@ -28,6 +26,8 @@ public class MySQLCoOwnerStorage implements CoOwnerStorage {
 
             Statement st = connection.createStatement();
             st.executeUpdate("CREATE TABLE IF NOT EXISTS coowners (plotid VARCHAR(64), uuid VARCHAR(36), UNIQUE KEY(plotid, uuid));");
+            // Optional: Tabelle für Owner
+            st.executeUpdate("CREATE TABLE IF NOT EXISTS plot_owners (plotid VARCHAR(64) PRIMARY KEY, owner_uuid VARCHAR(36));");
         } catch (SQLException e) {
             Bukkit.getLogger().severe("[MultiOwnerAddon] MySQL init error: " + e.getMessage());
         }
@@ -73,7 +73,7 @@ public class MySQLCoOwnerStorage implements CoOwnerStorage {
         }
     }
 
-    @Override
+//    @Override
     public List<UUID> getCoOwners(String plotId) {
         List<UUID> result = new ArrayList<>();
         try {
@@ -88,6 +88,40 @@ public class MySQLCoOwnerStorage implements CoOwnerStorage {
             Bukkit.getLogger().severe("[MultiOwnerAddon] MySQL get error: " + e.getMessage());
         }
         return result;
+    }
+
+    @Override
+    public Set<String> getAllPlotIdsWithCoOwners() {
+        Set<String> plotIds = new HashSet<>();
+        try {
+            Statement st = connection.createStatement();
+            ResultSet rs = st.executeQuery("SELECT DISTINCT plotid FROM coowners;");
+            while (rs.next()) {
+                plotIds.add(rs.getString("plotid"));
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().warning("[MultiOwnerAddon] MySQL getAllPlotIdsWithCoOwners error: " + e.getMessage());
+        }
+        return plotIds;
+    }
+
+    @Override
+    public boolean isOwnerValid(String plotId, UUID ownerUuid) {
+        if (ownerUuid == null) return false;
+        try {
+            PreparedStatement ps = connection.prepareStatement(
+                    "SELECT owner_uuid FROM plot_owners WHERE plotid=?;"
+            );
+            ps.setString(1, plotId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                String savedOwner = rs.getString("owner_uuid");
+                return ownerUuid.toString().equals(savedOwner);
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().warning("[MultiOwnerAddon] MySQL isOwnerValid error: " + e.getMessage());
+        }
+        return false;
     }
 
     @Override
