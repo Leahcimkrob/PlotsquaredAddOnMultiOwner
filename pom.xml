@@ -47,7 +47,7 @@
             <version>1.21.4-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
-        <!-- PlotSquared v6 (letzte stabile Version, Stand Juni 2025 vermutlich 6.13.3) -->
+        <!-- PlotSquared v7 -->
         <dependency>
             <groupId>com.intellectualsites.plotsquared</groupId>
             <artifactId>plotsquared-core</artifactId>

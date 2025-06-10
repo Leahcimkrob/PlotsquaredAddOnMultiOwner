@@ -1,21 +1,21 @@
 package de.ethria.plotsquerdaddonmultiowner;
 
-import com.plotsquared.core.PlotAPI;
+import com.plotsquared.core.PlotSquared;
 import com.plotsquared.core.plot.Plot;
-import com.plotsquared.core.events.PlotChangeOwnerEvent;
+import com.plotsquared.core.plot.PlotId;
+import com.plotsquared.core.plot.PlotArea;
+import com.plotsquared.core.location.Location;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.*;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
-import org.bukkit.event.world.PlotDeleteEvent;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class MultiOwnerAddon extends JavaPlugin implements Listener, CommandExecutor {
+public class MultiOwnerAddon extends JavaPlugin implements CommandExecutor {
 
     private final Map<UUID, MultiownerRequest> pendingRequests = new ConcurrentHashMap<>();
     private CoOwnerStorage coOwnerStorage;
@@ -26,7 +26,6 @@ public class MultiOwnerAddon extends JavaPlugin implements Listener, CommandExec
         instance = this;
         saveDefaultConfig();
 
-        // Datenbank-Backend wählen
         String storageType = getConfig().getString("storage-type", "yaml");
         if (storageType.equalsIgnoreCase("mysql")) {
             coOwnerStorage = new MySQLCoOwnerStorage(this);
@@ -35,15 +34,20 @@ public class MultiOwnerAddon extends JavaPlugin implements Listener, CommandExec
         }
         coOwnerStorage.init();
 
-        Bukkit.getPluginManager().registerEvents(this, this);
-
-        // Aliasse aus der Config eintragen
         List<String> aliases = getConfig().getStringList("command-aliases");
         PluginCommand cmd = this.getCommand("multiowner");
         if (cmd != null) {
             cmd.setExecutor(this);
             cmd.setAliases(aliases);
         }
+
+        // Polling-Task zum Aufräumen von CoOwner-Einträgen
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                cleanupCoOwners();
+            }
+        }.runTaskTimer(this, 20 * 60, 20 * 60 * 10); // alle 10 Minuten
     }
 
     @Override
@@ -60,7 +64,14 @@ public class MultiOwnerAddon extends JavaPlugin implements Listener, CommandExec
             return true;
         }
 
-        Plot plot = PlotAPI.getPlot(player.getLocation());
+        org.bukkit.Location bukkitLoc = player.getLocation();
+        String world = bukkitLoc.getWorld().getName();
+        int x = bukkitLoc.getBlockX();
+        int y = bukkitLoc.getBlockY();
+        int z = bukkitLoc.getBlockZ();
+        Location psLoc = Location.at(world, x, y, z);
+        Plot plot = Plot.getPlot(psLoc);
+
         if (plot == null) {
             player.sendMessage(getMsg("msg_no_plot"));
             return true;
@@ -169,16 +180,21 @@ public class MultiOwnerAddon extends JavaPlugin implements Listener, CommandExec
         }
     }
 
-    @EventHandler
-    public void onPlotDelete(PlotDeleteEvent event) {
-        String plotId = event.getPlot().getId().toString();
-        coOwnerStorage.removeAllCoOwners(plotId);
-    }
-
-    @EventHandler
-    public void onPlotOwnerChange(PlotChangeOwnerEvent event) {
-        String plotId = event.getPlot().getId().toString();
-        coOwnerStorage.removeAllCoOwners(plotId);
+    /**
+     * Pollt regelmäßig alle gespeicherten Plots und räumt CoOwner auf,
+     * falls das Plot nicht mehr existiert oder der Owner sich geändert hat.
+     */
+    private void cleanupCoOwners() {
+        Set<String> plotIds = coOwnerStorage.getAllPlotIdsWithCoOwners();
+        for (String plotIdStr : plotIds) {
+            PlotId plotId = PlotId.fromString(plotIdStr);
+            PlotArea area = PlotSquared.get().getPlotAreaManager().getPlotArea(plotId);
+            Plot plot = (area != null) ? area.getPlot(plotId) : null;
+            UUID owner = (plot != null) ? plot.getOwner() : null;
+            if (plot == null || !coOwnerStorage.isOwnerValid(plotIdStr, owner)) {
+                coOwnerStorage.removeAllCoOwners(plotIdStr);
+            }
+        }
     }
 
     private static class MultiownerRequest {
