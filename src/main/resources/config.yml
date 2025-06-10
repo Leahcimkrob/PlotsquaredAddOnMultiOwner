@@ -1,0 +1,37 @@
+# Datenbank-Typ: "yaml" oder "mysql"
+storage-type: yaml
+
+# Aliasse für den Multiowner-Command
+command-aliases:
+  - multi
+  - coowner
+  - mo
+
+mysql:
+  host: localhost
+  port: 3306
+  database: minecraft
+  user: root
+  password: password
+
+messages:
+  msg_multiowner_usage: "&eVerwendung: /multiowner <add|accept|deny|remove> <Spieler>"
+  msg_no_plot: "&cDu stehst auf keinem Plot."
+  msg_usage_request: "&eVerwendung: /multiowner add <OwnerName>"
+  msg_owner_not_found: "&cOwner nicht gefunden."
+  msg_not_owner: "&cDieser Spieler ist nicht der Plotowner."
+  msg_request_notify: "&e%player% möchte Co-Owner auf deinem Plot %plot% werden. Benutze /multiowner accept %player% oder /multiowner deny %player%"
+  msg_request_sent: "&aAnfrage gesendet."
+  msg_usage_accept: "&eVerwendung: /multiowner accept <Spieler>"
+  msg_player_not_found: "&cSpieler nicht gefunden."
+  msg_no_request: "&cKeine passende Anfrage gefunden."
+  msg_accept_success: "&a%player% ist jetzt Co-Owner auf Plot %plot%."
+  msg_you_are_coowner: "&aDu bist jetzt Co-Owner auf Plot %plot%."
+  msg_usage_deny: "&eVerwendung: /multiowner deny <Spieler>"
+  msg_deny_owner: "&eAnfrage von %player% abgelehnt."
+  msg_deny_requester: "&cDeine Anfrage wurde abgelehnt."
+  msg_usage_remove: "&eVerwendung: /multiowner remove <Spieler>"
+  msg_remove_not_owner: "&cNur der Plotowner kann Co-Owner entfernen."
+  msg_remove_not_found: "&c%player% ist kein Co-Owner dieses Plots."
+  msg_remove_success: "&a%player% wurde als Co-Owner von Plot %plot% entfernt."
+  msg_remove_notify: "&cDu wurdest als Co-Owner von Plot %plot% entfernt."

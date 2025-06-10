@@ -1,0 +1,10 @@
+name: PlotSquaredMultiOwner
+main: de.ethria.plotsquerdaddonmultiowner.MultiOwnerAddon
+version: 1.3
+api-version: 1.20
+depend: [PlotSquared]
+commands:
+  multiowner:
+    description: Multiowner-Addon für Plots
+    usage: /multiowner <add|accept|deny|remove> <Spieler>
+    aliases: [] # Wird zur Laufzeit aus config.yml gesetzt
