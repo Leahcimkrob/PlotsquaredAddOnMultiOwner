@@ -35,3 +35,7 @@ messages:
   msg_remove_not_found: "&c%player% ist kein Co-Owner dieses Plots."
   msg_remove_success: "&a%player% wurde als Co-Owner von Plot %plot% entfernt."
   msg_remove_notify: "&cDu wurdest als Co-Owner von Plot %plot% entfernt."
+  msg_no_permission: "&cDu hast keine Berechtigung für diesen Befehl."
+  msg_config_reloaded: "&aDie Konfiguration wurde neu geladen."
+  msg_no_permission: "&cDu hast keine Berechtigung für diesen Befehl."
+  msg_player_not_found: "&cSpieler nicht gefunden."

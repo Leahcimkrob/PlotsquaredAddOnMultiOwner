@@ -1,6 +1,6 @@
 package de.ethria.plotsquerdaddonmultiowner;
 
-import com.plotsquared.core.PlotSquared;
+// import com.plotsquared.core.PlotSquared;
 import com.plotsquared.core.plot.Plot;
 import com.plotsquared.core.plot.PlotId;
 import com.plotsquared.core.location.Location;
@@ -83,7 +83,62 @@ public class MultiOwnerAddon extends JavaPlugin implements CommandExecutor, TabC
         String sub = args[0].toLowerCase(Locale.ROOT);
 
         switch (sub) {
+            case "reload":
+                if (!player.hasPermission("multiowner.admin.reload")) {
+                    player.sendMessage(getMsg("msg_no_permission"));
+                    return true;
+                }
+                reloadConfig();
+                player.sendMessage(getMsg("msg_config_reloaded"));
+                return true;
+
+            case "adminadd":
+                if (!player.hasPermission("multiowner.admin.add")) {
+                    player.sendMessage(getMsg("msg_no_permission"));
+                    return true;
+                }
+                if (args.length < 2) {
+                    player.sendMessage("§cVerwendung: /multiowner adminadd <Spieler> [PlotID]");
+                    return true;
+                }
+                Player targetAdd = Bukkit.getPlayer(args[1]);
+                if (targetAdd == null) {
+                    player.sendMessage(getMsg("msg_player_not_found"));
+                    return true;
+                }
+                String plotIdAdd = (args.length > 2) ? args[2] : plot.getId().toString();
+                coOwnerStorage.addCoOwner(plotIdAdd, targetAdd.getUniqueId());
+                player.sendMessage("§a" + targetAdd.getName() + " wurde als Coowner hinzugefügt (" + plotIdAdd + ").");
+                return true;
+
+            case "adminremove":
+                if (!player.hasPermission("multiowner.admin.remove")) {
+                    player.sendMessage(getMsg("msg_no_permission"));
+                    return true;
+                }
+                if (args.length < 2) {
+                    player.sendMessage("§cVerwendung: /multiowner adminremove <Spieler> [PlotID]");
+                    return true;
+                }
+                Player targetRemove = Bukkit.getPlayer(args[1]);
+                if (targetRemove == null) {
+                    player.sendMessage(getMsg("msg_player_not_found"));
+                    return true;
+                }
+                String plotIdRemove = (args.length > 2) ? args[2] : plot.getId().toString();
+                boolean removed = coOwnerStorage.removeCoOwner(plotIdRemove, targetRemove.getUniqueId());
+                if (removed) {
+                    player.sendMessage("§a" + targetRemove.getName() + " wurde als Coowner entfernt (" + plotIdRemove + ").");
+                } else {
+                    player.sendMessage("§c" + targetRemove.getName() + " war kein Coowner von " + plotIdRemove + ".");
+                }
+                return true;
+
             case "add":
+                if (!player.hasPermission("multiowner.add")) {
+                    player.sendMessage(getMsg("msg_no_permission"));
+                    return true;
+                }
                 if (args.length != 2) {
                     player.sendMessage(getMsg("msg_usage_request"));
                     return true;
@@ -93,7 +148,7 @@ public class MultiOwnerAddon extends JavaPlugin implements CommandExecutor, TabC
                     player.sendMessage(getMsg("msg_owner_not_found"));
                     return true;
                 }
-                if (!plot.getOwner().equals(owner.getUniqueId())) {
+                if (!plot.getOwner().equals(player.getUniqueId())) { // Korrektur aus vorheriger Antwort
                     player.sendMessage(getMsg("msg_not_owner"));
                     return true;
                 }
@@ -105,7 +160,12 @@ public class MultiOwnerAddon extends JavaPlugin implements CommandExecutor, TabC
                 player.sendMessage(getMsg("msg_request_sent"));
                 return true;
 
+
             case "accept":
+                if (!player.hasPermission("multiowner.accept")) {
+                    player.sendMessage(getMsg("msg_no_permission"));
+                    return true;
+                }
                 if (args.length != 2) {
                     player.sendMessage(getMsg("msg_usage_accept"));
                     return true;
@@ -130,6 +190,10 @@ public class MultiOwnerAddon extends JavaPlugin implements CommandExecutor, TabC
                 return true;
 
             case "deny":
+                if (!player.hasPermission("multiowner.deny")) {
+                    player.sendMessage(getMsg("msg_no_permission"));
+                    return true;
+                }
                 if (args.length != 2) {
                     player.sendMessage(getMsg("msg_usage_deny"));
                     return true;
@@ -151,6 +215,10 @@ public class MultiOwnerAddon extends JavaPlugin implements CommandExecutor, TabC
                 return true;
 
             case "remove":
+                if (!player.hasPermission("multiowner.remove")) {
+                    player.sendMessage(getMsg("msg_no_permission"));
+                    return true;
+                }
                 if (args.length != 2) {
                     player.sendMessage(getMsg("msg_usage_remove"));
                     return true;

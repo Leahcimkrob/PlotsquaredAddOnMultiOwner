@@ -1,7 +1,7 @@
 package de.ethria.plotsquerdaddonmultiowner;
 
 import org.bukkit.Bukkit;
-import de.ethria.plotsquerdaddonmultiowner.PlotUtil;
+
 import java.sql.*;
 import java.util.*;
 
@@ -16,33 +16,35 @@ public class MySQLCoOwnerStorage implements CoOwnerStorage {
     @Override
     public void init() {
         try {
-            String host = plugin.getConfig().getString("mysql.host");
-            int port = plugin.getConfig().getInt("mysql.port");
-            String db = plugin.getConfig().getString("mysql.database");
-            String user = plugin.getConfig().getString("mysql.user");
-            String pw = plugin.getConfig().getString("mysql.password");
-            String url = "jdbc:mysql://" + host + ":" + port + "/" + db + "?useSSL=false";
-            connection = DriverManager.getConnection(url, user, pw);
-
+            // Passe die Connection-Parameter nach Bedarf an
+            connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/deinedatenbank", "user", "pass");
             Statement st = connection.createStatement();
-            st.executeUpdate("CREATE TABLE IF NOT EXISTS coowners (plotid VARCHAR(64), uuid VARCHAR(36), UNIQUE KEY(plotid, uuid));");
-            // Optional: Tabelle für Owner
-            st.executeUpdate("CREATE TABLE IF NOT EXISTS plot_owners (plotid VARCHAR(64) PRIMARY KEY, owner_uuid VARCHAR(36));");
+            st.executeUpdate("CREATE TABLE IF NOT EXISTS coowners (" +
+                    "plotid VARCHAR(128) NOT NULL, " +
+                    "uuid VARCHAR(36) NOT NULL, " +
+                    "name VARCHAR(32) NOT NULL, " +
+                    "PRIMARY KEY (plotid, uuid)" +
+                    ");");
         } catch (SQLException e) {
-            Bukkit.getLogger().severe("[MultiOwnerAddon] MySQL init error: " + e.getMessage());
+            plugin.getLogger().severe("[MultiOwnerAddon] MySQL connection/init error: " + e.getMessage());
         }
     }
 
     @Override
     public void addCoOwner(String plotId, UUID uuid) {
+        String name = Bukkit.getOfflinePlayer(uuid).getName();
         try {
             PreparedStatement ps = connection.prepareStatement(
-                    "INSERT IGNORE INTO coowners (plotid, uuid) VALUES (?, ?);");
+                    "INSERT INTO coowners (plotid, uuid, name) VALUES (?, ?, ?) " +
+                            "ON DUPLICATE KEY UPDATE name=?;"
+            );
             ps.setString(1, plotId);
             ps.setString(2, uuid.toString());
+            ps.setString(3, name);
+            ps.setString(4, name);
             ps.executeUpdate();
         } catch (SQLException e) {
-            Bukkit.getLogger().severe("[MultiOwnerAddon] MySQL add error: " + e.getMessage());
+            plugin.getLogger().severe("[MultiOwnerAddon] MySQL add error: " + e.getMessage());
         }
     }
 
@@ -50,7 +52,8 @@ public class MySQLCoOwnerStorage implements CoOwnerStorage {
     public boolean removeCoOwner(String plotId, UUID uuid) {
         try {
             PreparedStatement ps = connection.prepareStatement(
-                    "DELETE FROM coowners WHERE plotid=? AND uuid=?;");
+                    "DELETE FROM coowners WHERE plotid=? AND uuid=?;"
+            );
             ps.setString(1, plotId);
             ps.setString(2, uuid.toString());
             int updated = ps.executeUpdate();
@@ -65,7 +68,8 @@ public class MySQLCoOwnerStorage implements CoOwnerStorage {
     public void removeAllCoOwners(String plotId) {
         try {
             PreparedStatement ps = connection.prepareStatement(
-                    "DELETE FROM coowners WHERE plotid=?;");
+                    "DELETE FROM coowners WHERE plotid=?;"
+            );
             ps.setString(1, plotId);
             ps.executeUpdate();
         } catch (SQLException e) {
@@ -73,12 +77,13 @@ public class MySQLCoOwnerStorage implements CoOwnerStorage {
         }
     }
 
-//    @Override
-    public List<UUID> getCoOwners(String plotId) {
-        List<UUID> result = new ArrayList<>();
+    // @Override
+    public Set<UUID> getCoOwners(String plotId) {
+        Set<UUID> result = new HashSet<>();
         try {
             PreparedStatement ps = connection.prepareStatement(
-                    "SELECT uuid FROM coowners WHERE plotid=?;");
+                    "SELECT uuid FROM coowners WHERE plotid=?;"
+            );
             ps.setString(1, plotId);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -86,6 +91,26 @@ public class MySQLCoOwnerStorage implements CoOwnerStorage {
             }
         } catch (SQLException e) {
             Bukkit.getLogger().severe("[MultiOwnerAddon] MySQL get error: " + e.getMessage());
+        }
+        return result;
+    }
+
+    // Neu: Gibt alle Coowner inkl. Name zurück
+    public List<CoOwnerInfo> getCoOwnerInfos(String plotId) {
+        List<CoOwnerInfo> result = new ArrayList<>();
+        try {
+            PreparedStatement ps = connection.prepareStatement(
+                    "SELECT uuid, name FROM coowners WHERE plotid=?;"
+            );
+            ps.setString(1, plotId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                UUID uuid = UUID.fromString(rs.getString("uuid"));
+                String name = rs.getString("name");
+                result.add(new CoOwnerInfo(uuid, name));
+            }
+        } catch (SQLException e) {
+            Bukkit.getLogger().severe("[MultiOwnerAddon] MySQL getCoOwnerInfos error: " + e.getMessage());
         }
         return result;
     }
@@ -117,5 +142,16 @@ public class MySQLCoOwnerStorage implements CoOwnerStorage {
         try {
             if (connection != null) connection.close();
         } catch (SQLException ignored) {}
+    }
+
+    // Hilfsklasse für Rückgabe von UUID und Name
+    public static class CoOwnerInfo {
+        public final UUID uuid;
+        public final String name;
+
+        public CoOwnerInfo(UUID uuid, String name) {
+            this.uuid = uuid;
+            this.name = name;
+        }
     }
 }

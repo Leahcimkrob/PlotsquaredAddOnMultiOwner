@@ -8,3 +8,33 @@ commands:
     description: Multiowner-Addon für Plots
     usage: /multiowner <add|accept|deny|remove> <Spieler>
     aliases: [] # Wird zur Laufzeit aus config.yml gesetzt
+
+permissions:
+  multiowner.admin:
+    description: Erlaubt alle Admin-Funktionen des MultiOwner-Plugins
+    default: op
+    children:
+      multiowner.admin.reload: true
+      multiowner.admin.add: true
+      multiowner.admin.remove: true
+  multiowner.admin.reload:
+    description: Erlaubt das Neuladen der Konfiguration
+    default: op
+  multiowner.admin.add:
+    description: Erlaubt das Admin-Hinzufügen von Coowner auf jedem Plot
+    default: op
+  multiowner.admin.remove:
+    description: Erlaubt das Admin-Entfernen von Coowner auf jedem Plot
+    default: op
+  multiowner.add:
+    description: Erlaubt das Hinzufügen von Co-Ownern
+    default: op
+  multiowner.accept:
+    description: Erlaubt das Annehmen von Co-Owner-Anfragen
+    default: op
+  multiowner.deny:
+    description: Erlaubt das Ablehnen von Co-Owner-Anfragen
+    default: op
+  multiowner.remove:
+    description: Erlaubt das Entfernen von Co-Ownern
+    default: op

@@ -1,9 +1,11 @@
 package de.ethria.plotsquerdaddonmultiowner;
 
-import java.util.*;
-import java.io.*;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.*;
 
 public class YamlCoOwnerStorage implements CoOwnerStorage {
     private final MultiOwnerAddon plugin;
@@ -27,18 +29,48 @@ public class YamlCoOwnerStorage implements CoOwnerStorage {
 
     @Override
     public void addCoOwner(String plotId, UUID uuid) {
-        List<String> owners = yaml.getStringList(plotId);
-        if (!owners.contains(uuid.toString())) {
-            owners.add(uuid.toString());
-            yaml.set(plotId, owners);
-            save();
+        String name = Bukkit.getOfflinePlayer(uuid).getName();
+        List<Map<?, ?>> rawList = yaml.getMapList(plotId);
+        List<Map<String, Object>> owners = new ArrayList<>();
+        boolean found = false;
+        for (Map<?, ?> entry : rawList) {
+            Map<String, Object> casted = new HashMap<>();
+            for (Map.Entry<?, ?> e : entry.entrySet()) {
+                casted.put(String.valueOf(e.getKey()), e.getValue());
+            }
+            if (casted.get("uuid") != null && casted.get("uuid").equals(uuid.toString())) {
+                // Update Name, falls er sich geändert hat
+                casted.put("name", name);
+                found = true;
+            }
+            owners.add(casted);
         }
+        if (!found) {
+            Map<String, Object> newOwner = new HashMap<>();
+            newOwner.put("uuid", uuid.toString());
+            newOwner.put("name", name);
+            owners.add(newOwner);
+        }
+        yaml.set(plotId, owners);
+        save();
     }
 
     @Override
     public boolean removeCoOwner(String plotId, UUID uuid) {
-        List<String> owners = yaml.getStringList(plotId);
-        boolean removed = owners.remove(uuid.toString());
+        List<Map<?, ?>> rawList = yaml.getMapList(plotId);
+        List<Map<String, Object>> owners = new ArrayList<>();
+        boolean removed = false;
+        for (Map<?, ?> entry : rawList) {
+            Map<String, Object> casted = new HashMap<>();
+            for (Map.Entry<?, ?> e : entry.entrySet()) {
+                casted.put(String.valueOf(e.getKey()), e.getValue());
+            }
+            if (casted.get("uuid") != null && casted.get("uuid").equals(uuid.toString())) {
+                removed = true;
+                continue;
+            }
+            owners.add(casted);
+        }
         yaml.set(plotId, owners);
         save();
         return removed;
@@ -51,12 +83,33 @@ public class YamlCoOwnerStorage implements CoOwnerStorage {
     }
 
     public Set<UUID> getCoOwners(String plotId) {
-        List<String> owners = yaml.getStringList(plotId);
         Set<UUID> result = new HashSet<>();
-        for (String s : owners) {
-            try {
-                result.add(UUID.fromString(s));
-            } catch (IllegalArgumentException ignore) {}
+        List<Map<?, ?>> rawList = yaml.getMapList(plotId);
+        for (Map<?, ?> entry : rawList) {
+            Object uuidObj = entry.get("uuid");
+            if (uuidObj != null) {
+                try {
+                    result.add(UUID.fromString(uuidObj.toString()));
+                } catch (IllegalArgumentException ignore) {}
+            }
+        }
+        return result;
+    }
+
+    // Neu: Gibt alle Coowner inkl. Name zurück
+    public List<CoOwnerInfo> getCoOwnerInfos(String plotId) {
+        List<CoOwnerInfo> result = new ArrayList<>();
+        List<Map<?, ?>> rawList = yaml.getMapList(plotId);
+        for (Map<?, ?> entry : rawList) {
+            Object uuidObj = entry.get("uuid");
+            Object nameObj = entry.get("name");
+            if (uuidObj != null) {
+                try {
+                    UUID uuid = UUID.fromString(uuidObj.toString());
+                    String name = nameObj != null ? nameObj.toString() : null;
+                    result.add(new CoOwnerInfo(uuid, name));
+                } catch (IllegalArgumentException ignore) {}
+            }
         }
         return result;
     }
@@ -66,7 +119,7 @@ public class YamlCoOwnerStorage implements CoOwnerStorage {
         return yaml.getKeys(false);
     }
 
-    // HIER: Owner-Prüfung via PlotSquared!
+    // Owner-Prüfung via PlotSquared!
     @Override
     public boolean isOwnerValid(String plotId, UUID ownerUuid) {
         if (ownerUuid == null) return false;
@@ -83,5 +136,16 @@ public class YamlCoOwnerStorage implements CoOwnerStorage {
         try {
             yaml.save(file);
         } catch (IOException ignore) {}
+    }
+
+    // Hilfsklasse für Rückgabe von UUID und Name
+    public static class CoOwnerInfo {
+        public final UUID uuid;
+        public final String name;
+
+        public CoOwnerInfo(UUID uuid, String name) {
+            this.uuid = uuid;
+            this.name = name;
+        }
     }
 }
