@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.UUID;
 
 public class MultiOwnerCommand implements CommandExecutor, TabCompleter {
-
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player)) {
@@ -26,7 +25,7 @@ public class MultiOwnerCommand implements CommandExecutor, TabCompleter {
         MultiOwnerAddon plugin = MultiOwnerAddon.instance;
 
         if (args.length == 0) {
-            player.sendMessage("§e/multiowner <add|remove|accept|deny|adminadd|adminremove|reload> ...");
+            player.sendMessage(plugin.getMsg("msg_usage_default"));
             return true;
         }
 
@@ -39,7 +38,7 @@ public class MultiOwnerCommand implements CommandExecutor, TabCompleter {
                     return true;
                 }
                 if (args.length < 2) {
-                    player.sendMessage("§cVerwendung: /multiowner add <Spieler>");
+                    player.sendMessage(plugin.getMsg("msg_usage_add"));
                     return true;
                 }
                 Player target = Bukkit.getPlayer(args[1]);
@@ -72,7 +71,7 @@ public class MultiOwnerCommand implements CommandExecutor, TabCompleter {
                     return true;
                 }
                 if (args.length < 2) {
-                    player.sendMessage("§cVerwendung: /multiowner remove <Spieler>");
+                    player.sendMessage(plugin.getMsg("msg_usage_remove"));
                     return true;
                 }
                 Player remTarget = Bukkit.getPlayer(args[1]);
@@ -105,10 +104,37 @@ public class MultiOwnerCommand implements CommandExecutor, TabCompleter {
                 player.sendMessage(plugin.getMsg("msg_reload"));
                 return true;
 
-            // ... Admin und Anfrage-Logik analog auf Nachrichten umstellen ...
+            // Admin-Commands analog, z.B.:
+            case "adminadd":
+                if (!player.hasPermission("multiowner.admin.add")) {
+                    player.sendMessage(plugin.getMsg("msg_no_permission"));
+                    return true;
+                }
+                if (args.length < 2) {
+                    player.sendMessage(plugin.getMsg("msg_usage_adminadd"));
+                    return true;
+                }
+                // Restliche Logik ...
+                return true;
+            case "adminremove":
+                if (!player.hasPermission("multiowner.admin.remove")) {
+                    player.sendMessage(plugin.getMsg("msg_no_permission"));
+                    return true;
+                }
+                if (args.length < 2) {
+                    player.sendMessage(plugin.getMsg("msg_usage_adminremove"));
+                    return true;
+                }
+                // Restliche Logik ...
+                return true;
 
             default:
-                player.sendMessage("§e/multiowner <add|remove|accept|deny|adminadd|adminremove|reload> ...");
+                // Unbekannter Befehl: Admin Usage, falls Permission, sonst Default
+                if (player.hasPermission("multiowner.admin.add") || player.hasPermission("multiowner.admin.remove")) {
+                    player.sendMessage(plugin.getMsg("msg_usage_admin"));
+                } else {
+                    player.sendMessage(plugin.getMsg("msg_usage_default"));
+                }
                 return true;
         }
     }

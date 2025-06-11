@@ -52,13 +52,12 @@ public class MultiOwnerAddon extends JavaPlugin {
             cmd.setAliases(aliases);
         }
 
-        // Polling-Task zum Aufräumen von CoOwner-Einträgen
         new BukkitRunnable() {
             @Override
             public void run() {
                 cleanupCoOwners();
             }
-        }.runTaskTimer(this, 20 * 60, 20 * 60 * 10); // alle 10 Minuten
+        }.runTaskTimer(this, 20 * 60, 20 * 60 * 10);
     }
 
     private void saveMessagesFile() {
@@ -78,10 +77,6 @@ public class MultiOwnerAddon extends JavaPlugin {
         coOwnerStorage.close();
     }
 
-    /**
-     * Pollt regelmäßig alle gespeicherten Plots und räumt CoOwner auf,
-     * falls das Plot nicht mehr existiert oder der Owner sich geändert hat.
-     */
     private void cleanupCoOwners() {
         Set<String> plotIds = coOwnerStorage.getAllPlotIdsWithCoOwners();
         for (String plotIdStr : plotIds) {
@@ -106,15 +101,14 @@ public class MultiOwnerAddon extends JavaPlugin {
                     coOwnerStorage.removeAllCoOwners(plotIdStr);
                 }
             } catch (Exception e) {
-                getLogger().warning("Fehler beim Verarbeiten von PlotID " + plotIdStr + ": " + e.getMessage());
+                String msg = getMsg("msg_cleanup_error")
+                        .replace("{plotid}", plotIdStr)
+                        .replace("{error}", e.getMessage() == null ? "unknown" : e.getMessage());
+                getLogger().warning(msg);
             }
         }
     }
 
-    /**
-     * Ermittelt die Plotgröße für eine PlotId robust via PlotArea/Reflection.
-     * Fallback auf 32 falls nicht möglich.
-     */
     public static int getPlotSizeFromPlotId(String plotIdStr) {
         try {
             String[] parts = plotIdStr.split(";", 2);
@@ -125,9 +119,7 @@ public class MultiOwnerAddon extends JavaPlugin {
             int px = Integer.parseInt(coords[0].trim());
             int pz = Integer.parseInt(coords[1].trim());
 
-            // Default fallback
             int fallbackPlotSize = 32;
-            // Koordinaten für Mitte des Plots (erstmal mit Fallbackgröße)
             int bx = px * fallbackPlotSize + fallbackPlotSize / 2;
             int bz = pz * fallbackPlotSize + fallbackPlotSize / 2;
 
@@ -135,7 +127,6 @@ public class MultiOwnerAddon extends JavaPlugin {
             PlotArea area = PlotSquared.get().getPlotAreaManager().getPlotArea(loc);
             if (area == null) return fallbackPlotSize;
 
-            // Versuche getPlotWidth() per Reflection
             try {
                 Method m = area.getClass().getMethod("getPlotWidth");
                 m.setAccessible(true);
@@ -147,7 +138,7 @@ public class MultiOwnerAddon extends JavaPlugin {
                     return ((Number) result).intValue();
                 }
             } catch (Exception e) {
-                // z. B. Methode nicht vorhanden – ignorieren, wir nutzen fallback
+                // fallback
             }
             return fallbackPlotSize;
         } catch (Exception e) {
@@ -178,9 +169,6 @@ public class MultiOwnerAddon extends JavaPlugin {
         return pendingRequests;
     }
 
-    /**
-     * Hilfsmethode, um das Plot zu ermitteln, auf dem ein Spieler steht.
-     */
     public Plot getPlayerStandingPlot(Player player) {
         org.bukkit.Location bukkitLoc = player.getLocation();
         String world = bukkitLoc.getWorld().getName();

@@ -16,7 +16,6 @@ public class MySQLCoOwnerStorage implements CoOwnerStorage {
     @Override
     public void init() {
         try {
-            // Passe die Connection-Parameter nach Bedarf an
             connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/deinedatenbank", "user", "pass");
             Statement st = connection.createStatement();
             st.executeUpdate("CREATE TABLE IF NOT EXISTS coowners (" +
@@ -26,7 +25,9 @@ public class MySQLCoOwnerStorage implements CoOwnerStorage {
                     "PRIMARY KEY (plotid, uuid)" +
                     ");");
         } catch (SQLException e) {
-            plugin.getLogger().severe("[MultiOwnerAddon] MySQL connection/init error: " + e.getMessage());
+            String msg = plugin.getMsg("msg_error_mysql_init")
+                    .replace("{error}", e.getMessage() == null ? "unknown" : e.getMessage());
+            plugin.getLogger().severe(msg);
         }
     }
 
@@ -44,7 +45,9 @@ public class MySQLCoOwnerStorage implements CoOwnerStorage {
             ps.setString(4, name);
             ps.executeUpdate();
         } catch (SQLException e) {
-            plugin.getLogger().severe("[MultiOwnerAddon] MySQL add error: " + e.getMessage());
+            String msg = plugin.getMsg("msg_error_mysql_add")
+                    .replace("{error}", e.getMessage() == null ? "unknown" : e.getMessage());
+            plugin.getLogger().severe(msg);
         }
     }
 
@@ -59,7 +62,9 @@ public class MySQLCoOwnerStorage implements CoOwnerStorage {
             int updated = ps.executeUpdate();
             return updated > 0;
         } catch (SQLException e) {
-            Bukkit.getLogger().severe("[MultiOwnerAddon] MySQL remove error: " + e.getMessage());
+            String msg = plugin.getMsg("msg_error_mysql_remove")
+                    .replace("{error}", e.getMessage() == null ? "unknown" : e.getMessage());
+            plugin.getLogger().severe(msg);
         }
         return false;
     }
@@ -73,7 +78,9 @@ public class MySQLCoOwnerStorage implements CoOwnerStorage {
             ps.setString(1, plotId);
             ps.executeUpdate();
         } catch (SQLException e) {
-            Bukkit.getLogger().severe("[MultiOwnerAddon] MySQL remove all error: " + e.getMessage());
+            String msg = plugin.getMsg("msg_error_mysql_removeall")
+                    .replace("{error}", e.getMessage() == null ? "unknown" : e.getMessage());
+            plugin.getLogger().severe(msg);
         }
     }
 
@@ -90,12 +97,13 @@ public class MySQLCoOwnerStorage implements CoOwnerStorage {
                 result.add(UUID.fromString(rs.getString("uuid")));
             }
         } catch (SQLException e) {
-            Bukkit.getLogger().severe("[MultiOwnerAddon] MySQL getCoOwners error: " + e.getMessage());
+            String msg = plugin.getMsg("msg_error_mysql_getcoowners")
+                    .replace("{error}", e.getMessage() == null ? "unknown" : e.getMessage());
+            plugin.getLogger().severe(msg);
         }
         return result;
     }
 
-    // Neu: Gibt alle Coowner inkl. Name zurück
     public List<CoOwnerInfo> getCoOwnerInfos(String plotId) {
         List<CoOwnerInfo> result = new ArrayList<>();
         try {
@@ -110,7 +118,9 @@ public class MySQLCoOwnerStorage implements CoOwnerStorage {
                 result.add(new CoOwnerInfo(uuid, name));
             }
         } catch (SQLException e) {
-            Bukkit.getLogger().severe("[MultiOwnerAddon] MySQL getCoOwnerInfos error: " + e.getMessage());
+            String msg = plugin.getMsg("msg_error_mysql_getcoowners")
+                    .replace("{error}", e.getMessage() == null ? "unknown" : e.getMessage());
+            plugin.getLogger().severe(msg);
         }
         return result;
     }
@@ -125,7 +135,9 @@ public class MySQLCoOwnerStorage implements CoOwnerStorage {
                 plotIds.add(rs.getString("plotid"));
             }
         } catch (SQLException e) {
-            plugin.getLogger().warning("[MultiOwnerAddon] MySQL getAllPlotIdsWithCoOwners error: " + e.getMessage());
+            String msg = plugin.getMsg("msg_error_mysql_getall")
+                    .replace("{error}", e.getMessage() == null ? "unknown" : e.getMessage());
+            plugin.getLogger().warning(msg);
         }
         return plotIds;
     }
@@ -141,14 +153,16 @@ public class MySQLCoOwnerStorage implements CoOwnerStorage {
     public void close() {
         try {
             if (connection != null) connection.close();
-        } catch (SQLException ignored) {}
+        } catch (SQLException e) {
+            String msg = plugin.getMsg("msg_error_mysql_close")
+                    .replace("{error}", e.getMessage() == null ? "unknown" : e.getMessage());
+            plugin.getLogger().severe(msg);
+        }
     }
 
-    // Hilfsklasse für Rückgabe von UUID und Name
     public static class CoOwnerInfo {
         public final UUID uuid;
         public final String name;
-
         public CoOwnerInfo(UUID uuid, String name) {
             this.uuid = uuid;
             this.name = name;

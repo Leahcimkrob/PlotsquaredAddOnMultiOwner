@@ -23,7 +23,10 @@ public class YamlCoOwnerStorage implements CoOwnerStorage {
             if (!file.exists()) file.createNewFile();
             yaml = YamlConfiguration.loadConfiguration(file);
         } catch (IOException e) {
-            Bukkit.getLogger().severe("[MultiOwnerAddon] YAML init error: " + e.getMessage());
+            // Nur ins Log schreiben, nicht an Spieler
+            String msg = plugin.getMsg("msg_error_yaml_init")
+                    .replace("{error}", e.getMessage() == null ? "unknown" : e.getMessage());
+            plugin.getLogger().severe(msg);
         }
     }
 
@@ -39,7 +42,6 @@ public class YamlCoOwnerStorage implements CoOwnerStorage {
                 casted.put(String.valueOf(e.getKey()), e.getValue());
             }
             if (casted.get("uuid") != null && casted.get("uuid").equals(uuid.toString())) {
-                // Update Name, falls er sich geändert hat
                 casted.put("name", name);
                 found = true;
             }
@@ -97,7 +99,6 @@ public class YamlCoOwnerStorage implements CoOwnerStorage {
         return result;
     }
 
-    // Neu: Gibt alle Coowner inkl. Name zurück
     public List<CoOwnerInfo> getCoOwnerInfos(String plotId) {
         List<CoOwnerInfo> result = new ArrayList<>();
         List<Map<?, ?>> rawList = yaml.getMapList(plotId);
@@ -120,7 +121,6 @@ public class YamlCoOwnerStorage implements CoOwnerStorage {
         return yaml.getKeys(false);
     }
 
-    // Owner-Prüfung via PlotSquared!
     @Override
     public boolean isOwnerValid(String plotId, UUID ownerUuid) {
         if (ownerUuid == null) return false;
@@ -136,10 +136,14 @@ public class YamlCoOwnerStorage implements CoOwnerStorage {
     private void save() {
         try {
             yaml.save(file);
-        } catch (IOException ignore) {}
+        } catch (IOException e) {
+            // Nur ins Log schreiben, nicht an Spieler
+            String msg = plugin.getMsg("msg_error_yaml_save")
+                    .replace("{error}", e.getMessage() == null ? "unknown" : e.getMessage());
+            plugin.getLogger().severe(msg);
+        }
     }
 
-    // Hilfsklasse für Rückgabe von UUID und Name
     public static class CoOwnerInfo {
         public final UUID uuid;
         public final String name;
