@@ -11,7 +11,7 @@ target/
 *.iws
 *.iml
 *.ipr
-*.xls
+.idea/*.xls
 
 ### Eclipse ###
 .apt_generated
@@ -34,6 +34,3 @@ build/
 
 ### VS Code ###
 .vscode/
-
-### Mac OS ###
-.DS_Store
