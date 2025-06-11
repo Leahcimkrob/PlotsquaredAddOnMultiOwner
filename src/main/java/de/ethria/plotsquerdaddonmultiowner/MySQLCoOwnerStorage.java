@@ -77,7 +77,7 @@ public class MySQLCoOwnerStorage implements CoOwnerStorage {
         }
     }
 
-    // @Override
+    @Override
     public Set<UUID> getCoOwners(String plotId) {
         Set<UUID> result = new HashSet<>();
         try {
@@ -90,7 +90,7 @@ public class MySQLCoOwnerStorage implements CoOwnerStorage {
                 result.add(UUID.fromString(rs.getString("uuid")));
             }
         } catch (SQLException e) {
-            Bukkit.getLogger().severe("[MultiOwnerAddon] MySQL get error: " + e.getMessage());
+            Bukkit.getLogger().severe("[MultiOwnerAddon] MySQL getCoOwners error: " + e.getMessage());
         }
         return result;
     }

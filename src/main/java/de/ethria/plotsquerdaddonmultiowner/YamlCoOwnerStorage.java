@@ -82,6 +82,7 @@ public class YamlCoOwnerStorage implements CoOwnerStorage {
         save();
     }
 
+    @Override
     public Set<UUID> getCoOwners(String plotId) {
         Set<UUID> result = new HashSet<>();
         List<Map<?, ?>> rawList = yaml.getMapList(plotId);
