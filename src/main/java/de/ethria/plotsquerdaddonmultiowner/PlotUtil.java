@@ -16,13 +16,19 @@ public class PlotUtil {
      */
     public static UUID getOwnerFromPlotSquared(String plotIdStr) {
         try {
+            if (plotIdStr == null) return null;
+
+            // Akzeptiere sowohl ";" als auch "," als Trenner für Koordinaten
             String[] parts = plotIdStr.split(";", 2);
             if (parts.length != 2) return null;
             String worldName = parts[0];
-            String[] coords = parts[1].split(",");
+            String coordsRaw = parts[1].replace(';', ','); // Ersetze evtl. falsche Trenner
+
+            String[] coords = coordsRaw.split(",");
             if (coords.length != 2) return null;
-            int plotX = Integer.parseInt(coords[0]);
-            int plotZ = Integer.parseInt(coords[1]);
+
+            int plotX = Integer.parseInt(coords[0].trim());
+            int plotZ = Integer.parseInt(coords[1].trim());
 
             // Plotgröße ggf. aus PlotSquared-Config nehmen!
             int plotSize = 32;
