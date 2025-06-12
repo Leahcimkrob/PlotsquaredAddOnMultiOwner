@@ -1,5 +1,6 @@
 msg_no_plot: "&cDu stehst auf keinem Plot!"
 msg_no_permission: "&cDazu hast du keine Berechtigung!"
+msg_no_plot_direktion: "§cKein geclaimtes Plot in Blickrichtung gefunden."
 msg_not_player: "&cNur Spieler können diesen Befehl nutzen!"
 msg_request_sent: "&aAnfrage gesendet. Der Plotbesitzer muss sie annehmen."
 msg_request_received: "&aDu hast eine Merge-Anfrage von {spieler1]´} erhalten!\n(Akzeptieren mit &c/multiowner accept&a | Ablehnen m,it &c/multiowner deny)"
@@ -13,6 +14,8 @@ msg_request_accepted_logged: "&aDu hast die Multiowner-Anfrage von {target} akze
 msg_log_header: "&e--- CoownerLog ---"
 msg_log_entry: "Plot: {plotid} | Plot1: {plot1_name} | Plot2: {plot2_name} | AdminMerge: {adminmerge} | Zeit: {timestamp}"
 msg_unknown_subcommand: "&cUnbekannter Subbefehl."
+
+
 
 # Usage
 msg_usage_add: "&eVerwendung: /multiowner add"

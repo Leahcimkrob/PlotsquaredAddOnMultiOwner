@@ -210,6 +210,7 @@ public class CoownerCommand implements CommandExecutor {
         return true;
     }
 
+
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         if (args.length == 1) {
             return Arrays.asList("add", "accept", "deny", "adminadd", "reload", "log");

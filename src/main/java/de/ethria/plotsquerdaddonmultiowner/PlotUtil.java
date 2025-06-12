@@ -1,13 +1,13 @@
 package de.ethria.plotsquerdaddonmultiowner;
 
 import com.plotsquared.core.PlotSquared;
-import com.plotsquared.core.location.Location;
+//import com.plotsquared.core.location.Location;
 import com.plotsquared.core.plot.Plot;
 import com.plotsquared.core.plot.PlotArea;
 import com.plotsquared.core.plot.PlotId;
 
 import org.bukkit.Bukkit;
-// import org.bukkit.Location;
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
@@ -17,6 +17,7 @@ public class PlotUtil {
 
     /**
      * Konvertiert eine Bukkit-Location zu einer PlotSquared-Location.
+     *
      * @param loc Bukkit-Location
      * @return PlotSquared-Location
      */
@@ -31,6 +32,7 @@ public class PlotUtil {
 
     /**
      * Gibt die PlotId (z.B. "world;12,34") an der Position des Spielers zurück.
+     *
      * @param player Der Spieler
      * @return PlotId-String oder null, wenn kein Plot gefunden
      */
@@ -48,6 +50,7 @@ public class PlotUtil {
 
     /**
      * Holt den Owner eines Plots anhand der PlotId (Format: "welt;x,z") via PlotSquared.
+     *
      * @param plotIdStr z.B. "world;12,34"
      * @return UUID des Owners oder null, falls Plot nicht existiert.
      */
@@ -67,8 +70,8 @@ public class PlotUtil {
             int x = plotX * plotSize + plotSize / 2;
             int z = plotZ * plotSize + plotSize / 2;
 
-            Location loc = Location.at(worldName, x, 64, z);
-            PlotArea area = PlotSquared.get().getPlotAreaManager().getPlotArea(loc);
+            com.plotsquared.core.location.Location psLoc = com.plotsquared.core.location.Location.at(worldName, x, 64, z);
+            PlotArea area = PlotSquared.get().getPlotAreaManager().getPlotArea(psLoc);
             if (area == null) return null;
 
             PlotId plotId = PlotId.of(plotX, plotZ);
@@ -83,7 +86,8 @@ public class PlotUtil {
 
     /**
      * Prüft, ob ein Spieler mit der gegebenen UUID der Owner des Plots ist.
-     * @param plotId Plot-ID im Format "welt;x,z"
+     *
+     * @param plotId     Plot-ID im Format "welt;x,z"
      * @param playerUuid UUID des Spielers
      * @return true, wenn Spieler Owner ist
      */
@@ -94,8 +98,9 @@ public class PlotUtil {
 
     /**
      * Gibt den Spieler in Blickrichtung (bis zu 'range' Blöcke) zurück, oder null.
+     *
      * @param player Spieler, dessen Blickrichtung geprüft wird
-     * @param range Maximaler Abstand in Blöcken
+     * @param range  Maximaler Abstand in Blöcken
      * @return Spieler in Blickrichtung oder null
      */
     public static Player getPlayerInSight(Player player, int range) {
@@ -159,5 +164,31 @@ public class PlotUtil {
             e.printStackTrace();
             return false;
         }
+    }
+
+    /**
+     * Findet das erste Plot in der Blickrichtung des Spielers bis zu einer bestimmten Reichweite.
+     * Gibt das Plot (PlotSquared-API) zurück oder null, wenn keins gefunden wurde.
+     *
+     * @param player      Der Spieler, von dessen Augen aus gesucht wird
+     * @param maxDistance Maximale Entfernung (in Blöcken), die geprüft wird
+     * @return Das gefundene Plot oder null
+     */
+    public static Plot findNextPlotInSight(Player player, int maxDistance) {
+        Location origin = player.getEyeLocation();
+        Vector direction = origin.getDirection().normalize();
+
+        for (int i = 0; i <= maxDistance; i++) {
+            Location check = origin.clone().add(direction.clone().multiply(i));
+            com.plotsquared.core.location.Location psLoc = bukkitToPlotSquaredLocation(check);
+
+            PlotArea area = PlotSquared.get().getPlotAreaManager().getPlotArea(psLoc);
+            if (area == null) continue;
+            Plot plot = area.getPlot(psLoc);
+            if (plot != null) {
+                return plot;
+            }
+        }
+        return null;
     }
 }
