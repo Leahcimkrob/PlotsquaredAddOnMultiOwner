@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>de.ethria</groupId>
     <artifactId>plotsquerdaddonmultiowner</artifactId>
-    <version>1.0-dev2</version>
+    <version>1.0-dev3</version>
     <packaging>jar</packaging>
 
     <name>PlotSquaredMultiOwner</name>

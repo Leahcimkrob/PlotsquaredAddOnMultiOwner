@@ -11,7 +11,7 @@ target/
 *.iws
 *.iml
 *.ipr
-.idea/*.xls
+*.xml
 
 ### Eclipse ###
 .apt_generated
@@ -34,3 +34,4 @@ build/
 
 ### VS Code ###
 .vscode/
+
