@@ -42,7 +42,7 @@ public class CoownerCommand implements CommandExecutor, TabCompleter {
             player.sendMessage(CoownerAddon.getInstance().getMsg("msg_request_denied"));
             // TODO: Eigene Logik für das Ablehnen
         } else if (sub.equals("adminadd")) {
-            // Beispiel: Admin fügt sich selbst als Coowner hinzu
+            // Beispiel: Teamler merged 2 Plots von unterschiedlichen Spieler
             // TODO: Permission prüfen und Logik ergänzen
             player.sendMessage(CoownerAddon.getInstance().getMsg("msg_admin_add"));
         } else if (sub.equals("reload")) {

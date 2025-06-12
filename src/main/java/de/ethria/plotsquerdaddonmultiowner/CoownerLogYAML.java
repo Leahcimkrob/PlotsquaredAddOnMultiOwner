@@ -17,18 +17,19 @@ public class CoownerLogYAML implements CoownerLogInterface {
     }
 
     @Override
-    public void logMerge(String plotId, UUID applicantUuid, UUID acceptorUuid) {
-        String applicantName = Bukkit.getOfflinePlayer(applicantUuid).getName();
-        String acceptorName = Bukkit.getOfflinePlayer(acceptorUuid).getName();
+    public void logMerge(String plotId, UUID plot1Uuid, UUID plot2Uuid, boolean adminmerge) {
+        String plot1Name = Bukkit.getOfflinePlayer(plot1Uuid).getName();
+        String plot2Name = Bukkit.getOfflinePlayer(plot2Uuid).getName();
         long timestamp = System.currentTimeMillis() / 1000L;
 
         Map<String, Object> entry = new LinkedHashMap<>();
         entry.put("plotid", plotId);
-        entry.put("applicant_name", applicantName);
-        entry.put("applicant_uuid", applicantUuid.toString());
-        entry.put("acceptor_name", acceptorName);
-        entry.put("acceptor_uuid", acceptorUuid.toString());
+        entry.put("plot1_name", plot1Name);
+        entry.put("plot1_uuid", plot1Uuid.toString());
+        entry.put("plot2_name", plot2Name);
+        entry.put("plot2_uuid", plot2Uuid.toString());
         entry.put("timestamp", timestamp);
+        entry.put("adminmerge", adminmerge);
 
         List<Map<String, Object>> logs = (List<Map<String, Object>>) yaml.getList("coownerLog");
         if (logs == null) logs = new ArrayList<>();

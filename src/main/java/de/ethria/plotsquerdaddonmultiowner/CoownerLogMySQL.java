@@ -10,41 +10,23 @@ public class CoownerLogMySQL implements CoownerLogInterface {
 
     public CoownerLogMySQL(Connection connection) {
         this.connection = connection;
-        createTableIfNotExists();
-    }
-
-    private void createTableIfNotExists() {
-        try (Statement st = connection.createStatement()) {
-            st.executeUpdate(
-                    "CREATE TABLE IF NOT EXISTS coownerLog (" +
-                            "id INT AUTO_INCREMENT PRIMARY KEY, " +
-                            "plotid VARCHAR(64) NOT NULL, " +
-                            "applicant_name VARCHAR(32) NOT NULL, " +
-                            "applicant_uuid CHAR(36) NOT NULL, " +
-                            "acceptor_name VARCHAR(32) NOT NULL, " +
-                            "acceptor_uuid CHAR(36) NOT NULL, " +
-                            "timestamp BIGINT NOT NULL" +
-                            ");"
-            );
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
     }
 
     @Override
-    public void logMerge(String plotId, UUID applicantUuid, UUID acceptorUuid) {
-        String applicantName = Bukkit.getOfflinePlayer(applicantUuid).getName();
-        String acceptorName = Bukkit.getOfflinePlayer(acceptorUuid).getName();
+    public void logMerge(String plotId, UUID plot1Uuid, UUID plot2Uuid, boolean adminmerge) {
+        String plot1Name = Bukkit.getOfflinePlayer(plot1Uuid).getName();
+        String plot2Name = Bukkit.getOfflinePlayer(plot2Uuid).getName();
         long timestamp = System.currentTimeMillis() / 1000L;
 
-        String sql = "INSERT INTO coownerLog (plotid, applicant_name, applicant_uuid, acceptor_name, acceptor_uuid, timestamp) VALUES (?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO coownerLog (plotid, plot1_name, plot1_uuid, plot2_name, plot2_uuid, timestamp, adminmerge) VALUES (?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setString(1, plotId);
-            ps.setString(2, applicantName);
-            ps.setString(3, applicantUuid.toString());
-            ps.setString(4, acceptorName);
-            ps.setString(5, acceptorUuid.toString());
+            ps.setString(2, plot1Name);
+            ps.setString(3, plot1Uuid.toString());
+            ps.setString(4, plot2Name);
+            ps.setString(5, plot2Uuid.toString());
             ps.setLong(6, timestamp);
+            ps.setBoolean(7, adminmerge);
             ps.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -61,11 +43,12 @@ public class CoownerLogMySQL implements CoownerLogInterface {
                 Map<String, Object> entry = new LinkedHashMap<>();
                 entry.put("id", rs.getInt("id"));
                 entry.put("plotid", rs.getString("plotid"));
-                entry.put("applicant_name", rs.getString("applicant_name"));
-                entry.put("applicant_uuid", rs.getString("applicant_uuid"));
-                entry.put("acceptor_name", rs.getString("acceptor_name"));
-                entry.put("acceptor_uuid", rs.getString("acceptor_uuid"));
+                entry.put("plot1_name", rs.getString("plot1_name"));
+                entry.put("plot1_uuid", rs.getString("plot1_uuid"));
+                entry.put("plot2_name", rs.getString("plot2_name"));
+                entry.put("plot2_uuid", rs.getString("plot2_uuid"));
                 entry.put("timestamp", rs.getLong("timestamp"));
+                entry.put("adminmerge", rs.getBoolean("adminmerge"));
                 logs.add(entry);
             }
         } catch (SQLException e) {
