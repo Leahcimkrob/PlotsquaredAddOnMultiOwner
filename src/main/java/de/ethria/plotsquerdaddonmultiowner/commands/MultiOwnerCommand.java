@@ -57,48 +57,14 @@ public class MultiOwnerCommand implements CommandExecutor, TabCompleter {
                 }
                 String plotId = plot.getArea().getWorldName() + ";" + plot.getId().toString();
 
-        // --- Debug-Ausgabe hinzufügen ---
+                // --- Debug-Ausgabe ---
                 String worldName = plot.getArea().getWorldName();
                 String plotName = plot.getId().toString();
                 plugin.getLogger().info("[DEBUG] Weltname: " + worldName + " | PlotId: " + plotName);
+                plugin.getLogger().info("[DEBUG] PlotOwner-UUID: " + plot.getOwner() + " | Name: " + Bukkit.getOfflinePlayer(plot.getOwner()).getName());
 
-                UUID actualOwner = null;
-                try {
-                    actualOwner = de.ethria.plotsquerdaddonmultiowner.PlotUtil.getOwnerFromPlotSquared(worldName + ";" + plotName);
-
-                    // Debug für Area und Plot
-                    int plotX = plot.getId().getX();
-                    int plotZ = plot.getId().getY();
-                    int plotSize = 32; // oder aus PlotSquared-Konfiguration holen!
-                    int x = plotX * plotSize + plotSize / 2;
-                    int z = plotZ * plotSize + plotSize / 2;
-                    plugin.getLogger().info("[DEBUG] Welt: " + worldName + " | X: " + x + " | Z: " + z);
-
-                    com.plotsquared.core.location.Location loc = com.plotsquared.core.location.Location.at(worldName, x, 64, z);
-                    com.plotsquared.core.plot.PlotArea area = com.plotsquared.core.PlotSquared.get().getPlotAreaManager().getPlotArea(loc);
-                    plugin.getLogger().info("[DEBUG] Area gefunden: " + (area != null));
-                    if (area != null) {
-                        plugin.getLogger().info("[DEBUG] Area-ID: " + area.getId());
-                        com.plotsquared.core.plot.PlotId pId = com.plotsquared.core.plot.PlotId.of(plotX, plotZ);
-                        com.plotsquared.core.plot.Plot dbgPlot = area.getPlot(pId);
-                        plugin.getLogger().info("[DEBUG] Plot gefunden: " + (dbgPlot != null));
-                        if (dbgPlot != null) {
-                            plugin.getLogger().info("[DEBUG] Plot-Owner laut PlotSquared: " + dbgPlot.getOwner());
-                        }
-                    }
-
-                    String ownerName = "null";
-                    if (actualOwner != null) {
-                        ownerName = Bukkit.getOfflinePlayer(actualOwner).getName();
-                    }
-                    plugin.getLogger().info("[DEBUG] PlotOwner-UUID: " + actualOwner + " | Name: " + ownerName + " | PlotId: " + worldName + ";" + plotName);
-                } catch (Exception e) {
-                    plugin.getLogger().warning("[DEBUG] Fehler beim bestimmen des PlotOwners: " + e.getMessage());
-                }
-
-        // ---------------------------------
-
-                if (!de.ethria.plotsquerdaddonmultiowner.PlotUtil.isOwner(plotId, player.getUniqueId())) {
+                // Neue Owner-Prüfung direkt am Plot-Objekt:
+                if (!plot.getOwner().equals(player.getUniqueId())) {
                     player.sendMessage("Du bist nicht der Owner dieses Plots!");
                     return true;
                 }
@@ -131,7 +97,14 @@ public class MultiOwnerCommand implements CommandExecutor, TabCompleter {
                     player.sendMessage(plugin.getMsg("msg_no_plot"));
                     return true;
                 }
-                String remPlotId = remPlot.getId().toString();
+                String remPlotId = remPlot.getArea().getWorldName() + ";" + remPlot.getId().toString();
+
+                // Owner-Prüfung direkt am Plot-Objekt:
+                if (!remPlot.getOwner().equals(player.getUniqueId())) {
+                    player.sendMessage("Du bist nicht der Owner dieses Plots!");
+                    return true;
+                }
+
                 if (!plugin.getCoOwnerStorage().getCoOwners(remPlotId).contains(remTarget.getUniqueId())) {
                     player.sendMessage(plugin.getMsg("msg_not_coowner"));
                     return true;
@@ -161,8 +134,10 @@ public class MultiOwnerCommand implements CommandExecutor, TabCompleter {
                     player.sendMessage(plugin.getMsg("msg_usage_adminadd"));
                     return true;
                 }
+                // Bei adminadd KEINE Owner-Prüfung! (Admin darf unabhängig vom Owner CoOwner setzen)
                 // Restliche Logik ...
                 return true;
+
             case "adminremove":
                 if (!player.hasPermission("multiowner.admin.remove")) {
                     player.sendMessage(plugin.getMsg("msg_no_permission"));
@@ -172,6 +147,7 @@ public class MultiOwnerCommand implements CommandExecutor, TabCompleter {
                     player.sendMessage(plugin.getMsg("msg_usage_adminremove"));
                     return true;
                 }
+                // Bei adminremove KEINE Owner-Prüfung! (Admin darf unabhängig vom Owner CoOwner entfernen)
                 // Restliche Logik ...
                 return true;
 
