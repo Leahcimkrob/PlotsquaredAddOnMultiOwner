@@ -5,7 +5,7 @@ import org.bukkit.Bukkit;
 import java.sql.*;
 import java.util.*;
 
-public class CoownerLogMySQL {
+public class CoownerLogMySQL implements CoownerLogInterface {
     private final Connection connection;
 
     public CoownerLogMySQL(Connection connection) {
@@ -31,6 +31,7 @@ public class CoownerLogMySQL {
         }
     }
 
+    @Override
     public void logMerge(String plotId, UUID applicantUuid, UUID acceptorUuid) {
         String applicantName = Bukkit.getOfflinePlayer(applicantUuid).getName();
         String acceptorName = Bukkit.getOfflinePlayer(acceptorUuid).getName();
@@ -50,6 +51,7 @@ public class CoownerLogMySQL {
         }
     }
 
+    @Override
     public List<Map<String, Object>> getAllLogs() {
         List<Map<String, Object>> logs = new ArrayList<>();
         String sql = "SELECT * FROM coownerLog ORDER BY id ASC";

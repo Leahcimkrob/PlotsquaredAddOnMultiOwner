@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>de.ethria</groupId>
     <artifactId>plotsquerdaddonmultiowner</artifactId>
-    <version>1.0-dev3</version>
+    <version>1.0-dev4</version>
     <packaging>jar</packaging>
 
     <name>PlotSquaredMultiOwner</name>
@@ -30,18 +30,6 @@
             <url>https://repo.papermc.io/repository/maven-public/</url>
         </repository>
     </repositories>
-
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>com.intellectualsites.bom</groupId>
-                <artifactId>bom-newest</artifactId>
-                <version>1.52</version>
-                <scope>import</scope>
-                <type>pom</type>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
 
     <dependencies>
         <dependency>

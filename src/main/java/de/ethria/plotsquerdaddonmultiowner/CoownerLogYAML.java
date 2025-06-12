@@ -7,7 +7,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
-public class CoownerLogYAML {
+public class CoownerLogYAML implements CoownerLogInterface {
     private final File file;
     private final YamlConfiguration yaml;
 
@@ -16,12 +16,12 @@ public class CoownerLogYAML {
         this.yaml = YamlConfiguration.loadConfiguration(file);
     }
 
+    @Override
     public void logMerge(String plotId, UUID applicantUuid, UUID acceptorUuid) {
         String applicantName = Bukkit.getOfflinePlayer(applicantUuid).getName();
         String acceptorName = Bukkit.getOfflinePlayer(acceptorUuid).getName();
         long timestamp = System.currentTimeMillis() / 1000L;
 
-        // Daten als Map für YAML
         Map<String, Object> entry = new LinkedHashMap<>();
         entry.put("plotid", plotId);
         entry.put("applicant_name", applicantName);
@@ -42,6 +42,7 @@ public class CoownerLogYAML {
         }
     }
 
+    @Override
     public List<Map<String, Object>> getAllLogs() {
         List<Map<String, Object>> logs = (List<Map<String, Object>>) yaml.getList("coownerLog");
         return logs != null ? logs : new ArrayList<>();

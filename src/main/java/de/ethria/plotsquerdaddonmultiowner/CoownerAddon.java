@@ -18,8 +18,16 @@ public class CoownerAddon extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        instance = this;
         saveDefaultConfig();
+        String host = getConfig().getString("mysql.host", "localhost");
+        int port = getConfig().getInt("mysql.port", 3306);
+        String database = getConfig().getString("mysql.database", "plotsquared");
+        String user = getConfig().getString("mysql.user", "root");
+        String password = getConfig().getString("mysql.password", "");
+
+// Die URL-Konstruktion muss vor der Benutzung stehen!
+        String url = "jdbc:mysql://" + host + ":" + port + "/" + database + "?autoReconnect=true";
+        instance = this;
         saveMessagesFile();
         loadMessages();
 
@@ -27,24 +35,17 @@ public class CoownerAddon extends JavaPlugin {
         useMySQL = getConfig().getString("storage-type", "yaml").equalsIgnoreCase("mysql");
         if (useMySQL) {
             try {
-                // Hole MySQL-Zugangsdaten aus config.yml
-                String host = getConfig().getString("mysql.host", "localhost");
-                int port = getConfig().getInt("mysql.port", 3306);
-                String database = getConfig().getString("mysql.database", "plotsquared");
-                String user = getConfig().getString("mysql.user", "root");
-                String password = getConfig().getString("mysql.password", "");
-                String url = "jdbc:mysql://" + host + ":" + port + "/" + database + "?autoReconnect=true";
-
+                // Konfigurationsdaten auslesen ...
                 java.sql.Connection connection = java.sql.DriverManager.getConnection(url, user, password);
-                coownerLog = new CoownerLogInterface(connection);
+                coownerLog = new CoownerLogMySQL(connection); // KORREKT!
                 getLogger().info("CoownerLogMySQL initialisiert.");
             } catch (Exception e) {
                 getLogger().severe("Fehler beim Aufbau der MySQL-Verbindung für coownerLog: " + e.getMessage());
                 getLogger().severe("Falle zurück auf YAML!");
-                coownerLog = new CoownerLogYAML(getDataFolder());
+                coownerLog = new CoownerLogYAML(getDataFolder()); // KORREKT!
             }
         } else {
-            coownerLog = new CoownerLogYAML(getDataFolder());
+            coownerLog = new CoownerLogYAML(getDataFolder()); // KORREKT!
             getLogger().info("CoownerLogYAML initialisiert.");
         }
 

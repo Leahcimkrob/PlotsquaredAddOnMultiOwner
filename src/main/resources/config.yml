@@ -3,7 +3,7 @@ storage-type: yaml
 
 # Aliasse für den Multiowner-Command
 command-aliases:
-  - PlotMultiOwner
+  - Coowner
 
 mysql:
   host: localhost

@@ -1,30 +1,28 @@
 name: PlotSquaredMultiOwner
 main: de.ethria.plotsquerdaddonmultiowner.CoownerAddon
-version: ${project.version} #wird aus der pom.xml übernommen
+version: ${project.version}
 api-version: 1.20
 depend: [PlotSquared]
 commands:
   multiowner:
     description: Multiowner-Addon für Plots
-    usage: /multiowner <add|accept|deny|remove> <Spieler>
-    aliases: [] # Wird zur Laufzeit aus config.yml gesetzt
-
+    usage: /multiowner <add|accept|deny|adminadd|reload|log> <Spieler>
 permissions:
-  multiowner.admin: #multiowner.admin.*
+  multiowner.admin:
     description: Erlaubt alle Admin-Funktionen des MultiOwner-Plugins
     default: op
     children:
       multiowner.admin.reload: true
       multiowner.admin.add: true
-      multiowner.admin.remove: true
+      multiowner.admin.log: true
   multiowner.admin.reload:
     description: Erlaubt das Neuladen der Konfiguration
     default: op
   multiowner.admin.add:
     description: Erlaubt das Admin-Hinzufügen von Coowner auf jedem Plot
     default: op
-  multiowner.admin.remove:
-    description: Erlaubt das Admin-Entfernen von Coowner auf jedem Plot
+  multiowner.admin.log:
+    description: Erlaubt das Einsehen des Coowner-Logs
     default: op
   multiowner.add:
     description: Erlaubt das Hinzufügen von Co-Ownern
@@ -34,7 +32,4 @@ permissions:
     default: op
   multiowner.deny:
     description: Erlaubt das Ablehnen von Co-Owner-Anfragen
-    default: op
-  multiowner.remove:
-    description: Erlaubt das Entfernen von Co-Ownern
     default: op
