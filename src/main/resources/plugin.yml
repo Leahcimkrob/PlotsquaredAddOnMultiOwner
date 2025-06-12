@@ -1,5 +1,5 @@
 name: PlotSquaredMultiOwner
-main: de.ethria.plotsquerdaddonmultiowner.MultiOwnerAddon
+main: de.ethria.plotsquerdaddonmultiowner.CoownerAddon
 version: ${project.version} #wird aus der pom.xml übernommen
 api-version: 1.20
 depend: [PlotSquared]
