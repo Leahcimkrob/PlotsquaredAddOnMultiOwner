@@ -1,5 +1,6 @@
 package de.ethria.plotsquerdaddonmultiowner;
 
+import com.plotsquared.core.plot.Plot;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
@@ -59,19 +60,14 @@ public class CoownerCommand implements CommandExecutor {
                 }
 
                 // 2. Plot-Owner in Blickrichtung bestimmen
-                Player target = PlotUtil.getPlayerInSight(player, 5);
-                if (target == null) {
-                    player.sendMessage("§cKein Spieler in Blickrichtung gefunden.");
+                Plot plot = PlotUtil.findNextPlotInSight(player, 50); // z.B. bis zu 50 Blöcke
+                if (plot == null) {
+                    player.sendMessage(CoownerAddon.getInstance().getMsg("msg_no_plot_direktion"));
                     return true;
                 }
-                String targetPlotId = PlotUtil.getPlotIdFromPlayerLocation(target);
-                if (targetPlotId == null) {
-                    player.sendMessage("§cDer Spieler steht auf keinem Plot.");
-                    return true;
-                }
-                UUID targetOwner = PlotUtil.getOwnerFromPlotSquared(targetPlotId);
-                if (targetOwner == null) {
-                    player.sendMessage("§cDer Plot hat keinen Owner.");
+                UUID targetOwner = PlotUtil.getOwnerFromPlot(plot);
+                if (owner == null) {
+                    player.sendMessage(CoownerAddon.getInstance().getMsg("msg_no_plot_direktion"));
                     return true;
                 }
 
@@ -81,7 +77,8 @@ public class CoownerCommand implements CommandExecutor {
 
                 // Meldungen senden
                 if (targetOwnerPlayer.isOnline()) {
-                    ((Player) targetOwnerPlayer).sendMessage(CoownerAddon.getInstance().getMsg("msg_request_received"));
+                    String receivedMsg = CoownerAddon.getInstance().getMsg("msg_request_received").replace("{sender}", player.getName());
+                    ((Player) targetOwnerPlayer).sendMessage(receivedMsg);
                 }
                 player.sendMessage(CoownerAddon.getInstance().getMsg("msg_request_sent"));
                 break;
@@ -103,7 +100,7 @@ public class CoownerCommand implements CommandExecutor {
                 // 2. Gibt es eine offene Anfrage für diesen Spieler?
                 PendingRequest req = pendingRequests.get(player.getUniqueId());
                 if (req == null) {
-                    player.sendMessage("§cKeine offene Anfrage vorhanden.");
+                    player.sendMessage(CoownerAddon.getInstance().getMsg("msg_request_no_available"));
                     return true;
                 }
                 // Zeit ggf. prüfen (Timeout)
@@ -114,15 +111,15 @@ public class CoownerCommand implements CommandExecutor {
                     // Nachricht an beide Spieler
                     Player anfragender = Bukkit.getPlayer(req.requester);
                     if (anfragender != null) {
-                        anfragender.sendMessage("§aPlots wurden gemerged!");
+                        anfragender.sendMessage(CoownerAddon.getInstance().getMsg("msg_plot_merge"));
                     }
-                    player.sendMessage("§aPlots wurden erfolgreich gemerged!");
+                    player.sendMessage(CoownerAddon.getInstance().getMsg("msg_plot_merge"));
                     // Loggen
                     CoownerAddon.getInstance().getCoownerLog().logMerge(
                             plotId, req.requester, player.getUniqueId(), false
                     );
                 } else {
-                    player.sendMessage("§cFehler beim Plot-Merge!");
+                    player.sendMessage(CoownerAddon.getInstance().getMsg("msg_plot_merge_error"));
                 }
                 // Anfrage entfernen
                 pendingRequests.remove(player.getUniqueId());
@@ -132,7 +129,7 @@ public class CoownerCommand implements CommandExecutor {
             case "deny": {
                 PendingRequest req = pendingRequests.get(player.getUniqueId());
                 if (req == null) {
-                    player.sendMessage("§cKeine offene Anfrage vorhanden.");
+                    player.sendMessage(CoownerAddon.getInstance().getMsg("msg_request_no_available"));
                     return true;
                 }
                 Player anfragender = Bukkit.getPlayer(req.requester);
@@ -147,12 +144,14 @@ public class CoownerCommand implements CommandExecutor {
                 // Beispiel: Teamler merged 2 Plots von unterschiedlichen Spieler
                 // TODO: Permission prüfen und Logik ergänzen
                 player.sendMessage(CoownerAddon.getInstance().getMsg("msg_admin_add"));
+                break;
             }
             case "reload": {
-                CoownerAddon.getInstance().reloadConfig();
-                CoownerAddon.getInstance().loadMessages();
-                player.sendMessage(CoownerAddon.getInstance().getMsg("msg_reload"));
-                // Konfiguration und Nachrichten neu laden
+                CoownerAddon plugin = CoownerAddon.getInstance();
+                plugin.reloadConfig();     // Lädt config.yml neu
+                plugin.loadMessages();     // Lädt messages.yml neu
+                player.sendMessage(plugin.getMsg("msg_reload"));
+                break;
             }
             case "log": {
                 int page = 1;
@@ -171,7 +170,10 @@ public class CoownerCommand implements CommandExecutor {
                 int fromIndex = (page - 1) * resultsPerPage;
                 int toIndex = Math.min(fromIndex + resultsPerPage, logs.size());
 
-                player.sendMessage(CoownerAddon.getInstance().getMsg("msg_log_header") + " Seite " + page + "/" + totalPages);
+                String header = CoownerAddon.getInstance().getMsg("msg_log_header")
+                        .replace("{page}", String.valueOf(page))
+                        .replace("{maxpage}", String.valueOf(totalPages));
+                player.sendMessage(header);
 
                 for (Map<String, Object> log : logs.subList(fromIndex, toIndex)) {
                     // Zeit formatieren
@@ -200,8 +202,9 @@ public class CoownerCommand implements CommandExecutor {
                 }
 
                 if (totalPages > 1) {
-                    player.sendMessage("§7Weitere Seiten anzeigen mit: /multiowner log <Seite>");
+                    player.sendMessage(CoownerAddon.getInstance().getMsg("msg_log_nextpage"));
                 }
+                break;
             }
             default:
                 player.sendMessage(CoownerAddon.getInstance().getMsg("msg_unknown_subcommand"));

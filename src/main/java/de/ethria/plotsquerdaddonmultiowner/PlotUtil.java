@@ -191,4 +191,12 @@ public class PlotUtil {
         }
         return null;
     }
+
+    public static UUID getOwnerFromPlot(com.plotsquared.core.plot.Plot plot) {
+        if (plot == null) return null;
+        if (!plot.getOwners().isEmpty()) {
+            return plot.getOwners().iterator().next();
+        }
+        return null;
+    }
 }
