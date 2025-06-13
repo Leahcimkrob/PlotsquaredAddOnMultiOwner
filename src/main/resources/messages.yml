@@ -1,3 +1,7 @@
+# Prefix
+msg_prefix: "&8&l[&4MultiplayerMerge&8&l]&7&l»"
+
+# Messages
 msg_no_plot: "&cDu stehst auf keinem Plot!"
 msg_no_permission: "&cDazu hast du keine Berechtigung!"
 msg_no_plot_direktion: "&cKein geclaimtes Plot in Blickrichtung gefunden."
@@ -19,9 +23,7 @@ msg_log_header: "&e--- CoownerLog | Seite {page}/{maxpage} --- "
 msg_log_entry: "Plot: {plotid} | Plot1: {plot1_name} | Plot2: {plot2_name} | AdminMerge: {adminmerge} | Zeit: {timestamp}"
 msg_unknown_subcommand: "&cUnbekannter Subbefehl."
 
-
-
-# Usage
+# Hilfe
 msg_usage_add: "&eVerwendung: /multiowner add"
 msg_usage_accept: "&eVerwendung: /multiowner accept"
 msg_usage_deny: "&eVerwendung: /multiowner deny"

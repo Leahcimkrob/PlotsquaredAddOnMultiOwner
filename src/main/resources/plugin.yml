@@ -24,12 +24,19 @@ permissions:
   multiowner.admin.log:
     description: Erlaubt das Einsehen des Coowner-Logs
     default: op
-  multiowner.add:
-    description: Erlaubt das Hinzufügen von Co-Ownern
+  multiowner.player:
+    description: Erlaubt alle Spieler-Funktionen des MultiOwner-Plugins
     default: op
-  multiowner.accept:
-    description: Erlaubt das Annehmen von Co-Owner-Anfragen
+    children:
+      multiowner.player.add: true
+      multiowner.player.accept: true
+      multiowner.player.deny: true
+  multiowner.player.add:
+    description: Erlaubt das Mergen mit dem Plot eines 2. Spielers
     default: op
-  multiowner.deny:
-    description: Erlaubt das Ablehnen von Co-Owner-Anfragen
+  multiowner.player.accept:
+    description: Erlaubt das Annehmen der Anfragen
+    default: op
+  multiowner.player.deny:
+    description: Erlaubt das Ablehnen von Anfragen
     default: op
